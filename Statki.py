@@ -38,6 +38,16 @@ def draw_text(surf, text, size, x, y):
     text_rect.midtop = (x, y)
     surf.blit(text_surface, text_rect)
 
+def draw_shield_bar( surf, x, y, pct):
+    if pct < 0:
+        pct = 0
+    BAR_LENGTH = 100
+    BAR_HEIGHT = 15
+    fill = ( pct / 100 ) * BAR_LENGTH
+    outline_rect = pygame.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
+    fill_rect = pygame.Rect(x, y, fill, BAR_HEIGHT)
+    pygame.draw.rect(surf, GREEN, fill_rect)
+    pygame.draw.rect(surf, WHITE, outline_rect, 2)
 class draw_pas(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -78,6 +88,9 @@ class StatekGracza(pygame.sprite.Sprite):
         self.speedx = 0
         self.last_update = pygame.time.get_ticks()
         self.shield = 100
+        self.shoot_delay = 250
+        self.last_shot = pygame.time.get_ticks()
+
 
     def update(self):
         self.speedx = 0
@@ -86,6 +99,8 @@ class StatekGracza(pygame.sprite.Sprite):
             self.speedx = -5
         if keystate[pygame.K_RIGHT]:
             self.speedx = 5
+        if keystate[pygame.K_SPACE]:
+            self.shoot()
         self.rect.x += self.speedx
         if self.rect.right>WIDTH:
             self.rect.right = WIDTH
@@ -95,10 +110,13 @@ class StatekGracza(pygame.sprite.Sprite):
 
         
     def shoot(self):
-        bullet = Bullet(self.rect.centerx, self.rect.top)
-        all_sprites.add(bullet)
-        bullets.add(bullet)
-        shoot_sound.play()
+        now = pygame.time.get_ticks()
+        if now - self.last_shot > self.shoot_delay:
+            self.last_shot = now
+            bullet = Bullet(self.rect.centerx, self.rect.top)
+            all_sprites.add(bullet)
+            bullets.add(bullet)
+            shoot_sound.play()
 
 class MobBoss(pygame.sprite.Sprite):
     def __init__(self):
@@ -220,7 +238,30 @@ class EnemyBullet(pygame.sprite.Sprite):
         if self.rect.bottom < 0 :
             self.kill()
 
-            
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self, center, size):
+        pygame.sprite.Sprite.__init__(self)
+        self.size = size
+        self.image = expl_anim[self.size][0]
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.frame = 0
+        self.last_update = pygame.time.get_ticks()
+        self.frame_rate = 50
+
+    def update(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_update > self.frame_rate:
+            self.last_update = now
+            self.frame += 1
+            if self.frame == len(expl_anim[self.size]):
+                self.kill()
+            else:
+                center = self.rect.center
+                self.image = expl_anim[self.size][self.frame]
+                self.rect = self.image.get_rect()
+                self.rect.center = center  
+
 #load all graphs from dirname
 background = pygame.image.load(path.join(img_dir, "background.png")).convert()
 background_rect = background.get_rect()
@@ -229,8 +270,20 @@ enemy_images = []
 bullet_img = pygame.image.load(path.join(img_dir, "laserRed16.png")).convert()
 Boss_img = pygame.image.load(path.join(img_dir, "enemyRed4.png")).convert()
 enemy_bullet_img = pygame.image.load(path.join(img_dir, "laserRed08.png")).convert()
-enemy_list = ['playerShip1_blue.png', 'playerShip1_green.png', 'playerShip1_orange.png']
+enemy_list = ['playerShip1_blue.png', 'playerShip1_green.png',
+                'playerShip1_orange.png']
 Shield = pygame.image.load(path.join(img_dir, 'HP.png')).convert()
+expl_anim = {}
+expl_anim['lg'] = []
+expl_anim['sm'] = []
+for i in range(9):
+    filename = 'regularExplosion0{}.png'.format(i)
+    img = pygame.image.load(path.join(img_dir, filename)).convert()
+    img.set_colorkey(BLACK)
+    img_lg = pygame.transform.scale(img, (75,75))
+    expl_anim['lg'].append(img_lg)
+    img_sm = pygame.transform.scale(img, (32,32))
+    expl_anim['sm'].append(img_sm)
 
 coin_img = pygame.image.load(path.join(img_dir, 'coin.png')).convert()
 coin_img = pygame.transform.scale(coin_img, (18,18))
@@ -281,20 +334,19 @@ while running:
     for event in pygame.event.get():
         # check for closing window
         if event.type == pygame.QUIT:
-            running = False         
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame. K_SPACE:
-                player.shoot()
+            running = False     
 
     # Update
     all_sprites.update()
 
-    #if bullet killed mob 
+    #if bullet hits mob 
     hits = pygame.sprite.groupcollide(mobs, bullets, True, True)  
     for hit in hits:
         score += 50 - hit.radius
         counterboss += 50 - hit.radius
         newmob()
+        expl = Explosion(hit.rect.center, 'sm')
+        all_sprites.add(expl)
     if counterboss > 100:
             all_sprites.add(Boss)
             counterboss = 0    
@@ -303,7 +355,9 @@ while running:
     hits = pygame.sprite.spritecollide(Boss, bullets, True)
     for hit in hits:        
         counter = counter + 1
-        if counter == 15:
+        expl = Explosion(hit.rect.center, 'lg')
+        all_sprites.add(expl)
+        if counter == 35:
             score += hit.radius /2 
             Boss.kill()
             bonus = spawn_bonus()
@@ -314,9 +368,12 @@ while running:
     for hit in hits: 
         hit_sound.play()
         player.shield = player.shield - hit.radius *2
-        Health = player.shield  
+        Health = player.shield
+        expl = Explosion(hit.rect.center, 'lg')
+        all_sprites.add(expl)  
         if player.shield < 0:
             running = False
+
     # Draw / render
     screen.fill(BLACK)
     screen.blit(background, background_rect)
@@ -324,6 +381,7 @@ while running:
     all_sprites.draw(screen)
     draw_text(screen, str(Health), 18, WIDTH - 890, 730) 
     draw_text(screen, str(score), 18, WIDTH - 980, 730)
+    draw_shield_bar( screen,WIDTH - 905, 733, Health)
     # *after* drawing everything, flip the display
     pygame.display.flip()
 
