@@ -2,13 +2,14 @@ import pygame
 import random
 import time
 from os import X_OK, path
-
+import sys
 img_dir = path.join(path.dirname(__file__), 'img')
 snd_dir = path.join(path.dirname(__file__), 'dźwięki')
 
 WIDTH = 1024
 HEIGHT = 768
 FPS = 150
+POWERUP_TIME = 5000
 
 # define colors
 WHITE = (255, 255, 255)
@@ -25,6 +26,7 @@ pygame.mixer.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Statki")
 clock = pygame.time.Clock()
+
 font_name = pygame.font.match_font('arial')
 def newmob():
     m = Mob()
@@ -68,19 +70,19 @@ class draw_pas(pygame.sprite.Sprite):
         #self.rect = self.second_image.get_rect()
         #self.rect.x = WIDTH - 990
         #self.rect.y = HEIGHT - 37
-class spawn_bonus(pygame.sprite.Sprite):
-    def __init__(self):
+class Pow(pygame.sprite.Sprite):
+    def __init__(self, center):
         pygame.sprite.Sprite.__init__(self)
-        self.type = random.choince(['shield', 'gun'])
-        self.image = bonus_img[self.type]
+        self.type = random.choice(['shield', 'gun'])
+        self.image = powerup_images[self.type]
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
-        self.rect.center = center()
-        self.speedy = 2
+        self.rect.center = center
+        self.speedy = 1
     
     def update(self):
         self.rect.y += self.speedy
-        if self.rect.top>HEIGHT:
+        if self.rect.top > HEIGHT:
             self.kill()
 
 class StatekGracza(pygame.sprite.Sprite):
@@ -100,13 +102,13 @@ class StatekGracza(pygame.sprite.Sprite):
         self.lives = 3
         self.hidden = False
         self.hide_timer = pygame.time.get_ticks()
-
-
+        self.power = 1
+        self.power_time = pygame.time.get_ticks()
 
     def update(self):
         if self.hidden and pygame.time.get_ticks() - self.hide_timer > 1000:
             self.hidden = False
-            self.rect.center = (WIDTH /2, HEIGHT - 65)
+            self.rect.center = (WIDTH /2, HEIGHT - 65 )
         self.speedx = 0
         keystate = pygame.key.get_pressed()
         if keystate[pygame.K_LEFT]:
@@ -120,23 +122,49 @@ class StatekGracza(pygame.sprite.Sprite):
             self.rect.right = WIDTH
         if self.rect.left < 0 :
             self.rect.left = 0
-    
+        #timeout for powerup
+        if self.power >= 2 and pygame.time.get_ticks() - self.power_time >POWERUP_TIME:
+            self.power -= 1
+            self.power_time = pygame.time.get_ticks()
 
-        
     def shoot(self):
         now = pygame.time.get_ticks()
         if now - self.last_shot > self.shoot_delay:
             self.last_shot = now
-            bullet = Bullet(self.rect.centerx, self.rect.top)
-            all_sprites.add(bullet)
-            bullets.add(bullet)
-            shoot_sound.play()
+            if self.power == 1:
+                bullet = Bullet(self.rect.centerx, self.rect.top)
+                all_sprites.add(bullet)
+                bullets.add(bullet)
+                shoot_sound.play()
+            if self.power == 2:
+                bullet1 = Bullet(self.rect.left, self.rect.top)
+                bullet2 = Bullet(self.rect.right, self.rect.top)
+                all_sprites.add(bullet1)
+                all_sprites.add(bullet2)
+                bullets.add(bullet1)
+                bullets.add(bullet2)
+                shoot_sound.play()
+            if self.power >= 3:
+                bullet1 = Bullet(self.rect.left, self.rect.top)
+                bullet2 = Bullet(self.rect.right, self.rect.top)
+                bullet3 = Bullet(self.rect.centerx, self.rect.top)
+                all_sprites.add(bullet1)
+                all_sprites.add(bullet2)
+                all_sprites.add(bullet3)
+                bullets.add(bullet1)
+                bullets.add(bullet2)
+                bullets.add(bullet3)
+                shoot_sound.play()
 
     def hide(self):
         #to hide player from bullets
         self.hidden = True
         self.hide_timer = pygame.time.get_ticks()
         self.rect.center = (WIDTH/2, HEIGHT + 200)
+
+    def powerup(self):
+        self.power += 1
+        self.power_time = pygame.time.get_ticks()
 
 
 class MobBoss(pygame.sprite.Sprite):
@@ -293,14 +321,15 @@ player_mini_img =pygame.transform.scale(player_img, (20,20))
 player_mini_img.set_colorkey(BLACK)
 enemy_images = [] 
 bullet_img = pygame.image.load(path.join(img_dir, "laserRed16.png")).convert()
+pow_bullet_img = pygame.image.load(path.join(img_dir,'powb.png')).convert()
 Boss_img = pygame.image.load(path.join(img_dir, "enemyRed4.png")).convert()
 enemy_bullet_img = pygame.image.load(path.join(img_dir, "laserRed08.png")).convert()
 enemy_list = ['playerShip1_blue.png', 'playerShip1_green.png',
                 'playerShip1_orange.png']
 Shield = pygame.image.load(path.join(img_dir, 'HP.png')).convert()
-bonus_img = {}
-bonus_img['shield'] = pygame.image.load(path.join(img_dir, 'pill_yellow.png'))
-bonus_img['gun'] = pygame.image.load(path.join(img_dir,'pill_red.png'))
+powerup_images = {}
+powerup_images['shield'] = pygame.image.load(path.join(img_dir, 'pill_yellow.png'))
+powerup_images['gun'] = pygame.image.load(path.join(img_dir,'pill_red.png'))
 expl_anim = {}
 expl_anim['lg'] = []
 expl_anim['sm'] = []
@@ -340,6 +369,7 @@ Boss = MobBoss()
 tarcza = draw_pas()
 mobs = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
+powerups = pygame.sprite.Group()
 enemybullets = pygame.sprite.Group()
 all_sprites.add(player)
 all_sprites.add(tarcza)
@@ -382,8 +412,8 @@ while running:
         newmob()
         expl = Explosion(hit.rect.center, 'sm')
         all_sprites.add(expl)
-        if random.random() >0.9:
-            pow = spawn_bonus(hit.center)
+        if random.random() >0.8:
+            pow = Pow(hit.rect.center)
             all_sprites.add(pow)
             powerups.add(pow)
         if counterboss > 100:
@@ -396,12 +426,23 @@ while running:
         counter = counter + 1
         expl = Explosion(hit.rect.center, 'lg')
         all_sprites.add(expl)
-        if counter == 35:
+        if counter == 5:
             score += hit.radius /2 
             Boss.kill()
-            bonus = spawn_bonus()
-            all_sprites.add(bonus)
-
+            #bonus = spawn_bonus()
+            #all_sprites.add(bonus)
+    
+    #if player hits pow
+    hits = pygame.sprite.spritecollide(player, powerups, True)
+    for hit in hits:
+        if hit.type == 'shield':
+            player.shield = player.shield + random.randrange(10,30)
+            Health = player.shield
+            if player.shield >= 100:
+                player.shield = 100
+                Health = 100
+        if hit.type == 'gun':
+            player.powerup()
     #if Mob hits player
     hits = pygame.sprite.spritecollide(player, enemybullets, True, pygame.sprite.collide_circle)
     for hit in hits: 
@@ -416,6 +457,7 @@ while running:
             player.hide()
             player.lives = player.lives - 1
             player.shield = 100
+    
     #if player lost all lives:
     if player.lives ==  0 and not death_explosion.alive():
         running = False
@@ -425,7 +467,7 @@ while running:
     screen.blit(coin_img, coin_rect)
     all_sprites.draw(screen) 
     draw_text(screen, str(score), 18, WIDTH - 980, 730)
-    draw_shield_bar( screen,WIDTH - 905, 733, player.shield)
+    draw_shield_bar( screen,WIDTH - 905, 733, Health)
     draw_lives(screen, WIDTH - 100, 5, player.lives, player_mini_img)
     # *after* drawing everything, flip the display
     pygame.display.flip()
