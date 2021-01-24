@@ -28,6 +28,7 @@ pygame.display.set_caption("Statki")
 clock = pygame.time.Clock()
 
 font_name = pygame.font.match_font('arial')
+    
 def newmob():
     m = Mob()
     all_sprites.add(m)
@@ -313,9 +314,26 @@ class Explosion(pygame.sprite.Sprite):
                 self.rect = self.image.get_rect()
                 self.rect.center = center  
 
+def show_menu_screen():
+    screen.blit(background, background_rect)
+    draw_text(screen, "STARSHIP", 54, WIDTH/2, HEIGHT / 4)
+    draw_text(screen, "Strzałki - Ruch, Spacja - Strzał, czerwona kapsułka buff ataku, żółta kapsułka buff tarczy", 20, WIDTH/2, HEIGHT/2)
+    draw_text(screen, "Naciśnij by zacząć", 18, WIDTH/2, HEIGHT * 3/4)
+    pygame.display.flip()
+    waiting = True
+    while waiting:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYUP:
+                waiting = False
+
 #load all graphs from dirname
 background = pygame.image.load(path.join(img_dir, "background.png")).convert()
 background_rect = background.get_rect()
+menu = pygame.image.load(path.join(img_dir, "menu.png")).convert()
+menu_rect = menu.get_rect()
 player_img = pygame.image.load(path.join(img_dir, "playerShip3_blue.png")).convert()
 player_mini_img =pygame.transform.scale(player_img, (20,20))
 player_mini_img.set_colorkey(BLACK)
@@ -348,6 +366,7 @@ for i in range(9):
     img_pl = pygame.transform.scale(img, (110,110))
     expl_anim['player'].append(img_pl)
 
+tarcza = pygame.transform.scale(Shield, (10,10))
 coin_img = pygame.image.load(path.join(img_dir, 'coin.png')).convert()
 coin_img = pygame.transform.scale(coin_img, (18,18))
 coin_rect = coin_img.get_rect()
@@ -363,7 +382,6 @@ pygame.mixer.music.load(path.join(snd_dir, 'background.ogg'))
 pygame.mixer.music.set_volume(0.4)
 
 all_sprites = pygame.sprite.Group()
-tarcza = pygame.transform.scale(Shield, (10,10))
 player = StatekGracza()
 Boss = MobBoss()
 tarcza = draw_pas()
@@ -375,9 +393,7 @@ all_sprites.add(player)
 all_sprites.add(tarcza)
 
 for i in range(15 ):
-    m = Mob()
-    all_sprites.add(m)
-    mobs.add(m)
+    newmob()
 
 #dynamics
 counterboss = 0
@@ -388,11 +404,29 @@ Health = player.shield
 
 
 pygame.mixer.music.play(loops = -1)
-
+#game state first state game menu
+game_over = True
 # Game loop
 running = True
 while running:
     
+    if game_over == True:
+        show_menu_screen()
+        game_over = False
+        all_sprites = pygame.sprite.Group()
+        player = StatekGracza()
+        Boss = MobBoss()
+        tarcza = draw_pas()
+        mobs = pygame.sprite.Group()
+        bullets = pygame.sprite.Group()
+        powerups = pygame.sprite.Group()
+        enemybullets = pygame.sprite.Group()
+        all_sprites.add(player)
+        player.shield = 100
+        Health = player.shield
+        all_sprites.add(tarcza)
+        for i in range(15 ):
+            newmob()
     # keep loop running at the right speed
     clock.tick(FPS)
     # Process input (events)
@@ -429,8 +463,7 @@ while running:
         if counter == 5:
             score += hit.radius /2 
             Boss.kill()
-            #bonus = spawn_bonus()
-            #all_sprites.add(bonus)
+            counter = 0
     
     #if player hits pow
     hits = pygame.sprite.spritecollide(player, powerups, True)
@@ -460,7 +493,7 @@ while running:
     
     #if player lost all lives:
     if player.lives ==  0 and not death_explosion.alive():
-        running = False
+        game_over = True
     # Draw / render
     screen.fill(BLACK)
     screen.blit(background, background_rect)
