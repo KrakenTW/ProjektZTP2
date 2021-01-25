@@ -2,7 +2,8 @@ import pygame
 import random
 import time
 from os import X_OK, path
-import sys
+from threading import Lock, Thread
+
 img_dir = path.join(path.dirname(__file__), 'img')
 snd_dir = path.join(path.dirname(__file__), 'dźwięki')
 
@@ -28,7 +29,7 @@ pygame.display.set_caption("Statki")
 clock = pygame.time.Clock()
 
 font_name = pygame.font.match_font('arial')
-    
+
 def newmob():
     m = Mob()
     all_sprites.add(m)
@@ -64,28 +65,6 @@ def draw_lives(surf, x, y, lives, img):
         img_rect.y = y 
         surf.blit(img, img_rect)
 
-
-class Memento(object):
-    def __init__(self, state):
-        self._state = state
-
-    def get_saved_state(self):
-        return self._state
-
-class Originator(object):
-    _state = ""
-
-    def set(self, state):
-        print("Originator: Setting state to", state)
-        self._state = state
-
-    def save_to_memento(self):
-        print("Originator: Saving to Memento.")
-        return Memento(self._state)
-
-    def restore_from_memento(self, memento):
-        self._state = memento.get_saved_state()
-        print("Originator: State after restoring from Memento:", self._state)
 
 
 class draw_pas(pygame.sprite.Sprite):
@@ -391,6 +370,18 @@ def show_menu_screen():
                 pygame.quit()
             if event.type == pygame.KEYUP:
                 waiting = False
+def show_pause_screen():
+    screen.blit(background, background_rect)
+    draw_text(screen, "PAUSE", 72, WIDTH/2, HEIGHT / 4)
+    pygame.display.flip()
+    waiting = True
+    while waiting:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYUP:
+                waiting = False
 
 #load all graphs from dirname
 background = pygame.image.load(path.join(img_dir, "background.png")).convert()
@@ -471,7 +462,6 @@ pygame.mixer.music.play(loops = -1)
 game_over = True
 # Game loop
 saved_states = []
-originator = Originator()
 
 running = True
 while running:
@@ -512,8 +502,9 @@ while running:
         if saves >= 3:
             saves = 0
         originator.restore_from_memento(saved_states[0])
+    
     if keystate[pygame.K_UP]:
-        show_menu_screen()
+        show_pause_screen()
 
     # keep loop running at the right speed
     clock.tick(FPS)
