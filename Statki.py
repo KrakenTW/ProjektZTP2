@@ -34,6 +34,11 @@ def newmob():
     all_sprites.add(m)
     mobs.add(m)
 
+def newboss():
+    n = MobBoss()
+    all_sprites.add(n)
+    Bosses.add(n)
+
 def draw_text(surf, text, size, x, y):
     font = pygame.font.Font(font_name, size)
     text_surface = font.render(text, True, SCOREBOARD)
@@ -58,6 +63,31 @@ def draw_lives(surf, x, y, lives, img):
         img_rect.x = x + 30*i
         img_rect.y = y 
         surf.blit(img, img_rect)
+
+
+class Memento(object):
+    def __init__(self, state):
+        self._state = state
+
+    def get_saved_state(self):
+        return self._state
+
+class Originator(object):
+    _state = ""
+
+    def set(self, state):
+        print("Originator: Setting state to", state)
+        self._state = state
+
+    def save_to_memento(self):
+        print("Originator: Saving to Memento.")
+        return Memento(self._state)
+
+    def restore_from_memento(self, memento):
+        self._state = memento.get_saved_state()
+        print("Originator: State after restoring from Memento:", self._state)
+
+
 class draw_pas(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -145,7 +175,7 @@ class StatekGracza(pygame.sprite.Sprite):
                 bullets.add(bullet1)
                 bullets.add(bullet2)
                 shoot_sound.play()
-            if self.power >= 3:
+            if self.power == 3:
                 bullet1 = Bullet(self.rect.left, self.rect.top)
                 bullet2 = Bullet(self.rect.right, self.rect.top)
                 bullet3 = Bullet(self.rect.centerx, self.rect.top)
@@ -155,6 +185,20 @@ class StatekGracza(pygame.sprite.Sprite):
                 bullets.add(bullet1)
                 bullets.add(bullet2)
                 bullets.add(bullet3)
+                shoot_sound.play()
+            if self.power >= 4:
+                bullet1 = Bullet(self.rect.left, self.rect.top)
+                bullet2 = Bullet(self.rect.right, self.rect.top)
+                bullet3 = Bullet(self.rect.centerx, self.rect.top)
+                bullet4 = Bullet(self.rect.centerx, self.rect.top + 30)
+                all_sprites.add(bullet1)
+                all_sprites.add(bullet2)
+                all_sprites.add(bullet3)
+                all_sprites.add(bullet4)
+                bullets.add(bullet1)
+                bullets.add(bullet2)
+                bullets.add(bullet3)
+                bullets.add(bullet4)
                 shoot_sound.play()
 
     def hide(self):
@@ -224,40 +268,59 @@ class Mob(pygame.sprite.Sprite):
         self.image = self.image_original.copy()
         self.rect = self.image.get_rect()
         self.radius = 15
-        self.rect.x = random.randrange(0,WIDTH)
+        self.rect.x = random.randrange(30, WIDTH - 60)
         self.rect.y = random.randrange(30, 300)
         self.speedy = 0
         self.speedx = 0
         self.move = 0 
         self.move_speed = 1
         self.last_update = pygame.time.get_ticks()
+        self.shoot_delay = random.randrange(1700,2500)
+        self.last_shot = pygame.time.get_ticks()
+        self.health = 2
+        self.power = 1
+        self.power_time = pygame.time.get_ticks()
 
     def update(self):
-        now = pygame.time.get_ticks()
         self.rect.x += self.speedx
         self.rect.y += self.speedy
         if self.speedx == 0 or self.speedx < -1 or self.speedx > 1:
             self.speedx = random.randrange(-1, 1)
-
-        if self.rect.x == WIDTH - 495:
+        # T = tymczasowa zmienna pozycji
+        T = self.rect.x
+        if T == WIDTH - 495 or T == WIDTH - 470 or T == WIDTH - 445 or T == WIDTH - 420 or T == WIDTH - 395 or T == WIDTH - 370:
             self.speedx = self.speedx * -1
             self.shooting()
-        if self.rect.x == WIDTH - 350:
+        if T == WIDTH - 350 or T == WIDTH - 325 or T == WIDTH - 300 or T == WIDTH - 275 or T == WIDTH - 250 or T == WIDTH - 225 or T == WIDTH - 200:
             self.speedx = self.speedx * -1
             self.shooting()
-        
+        if T == WIDTH - 175 or T == WIDTH - 150 or T == WIDTH - 125 or T == WIDTH - 100 or T == WIDTH - 75 or T == WIDTH - 50 or T == WIDTH - 25:
+            self.speedx = self.speedx * -1
+            self.shooting()
+        if T == WIDTH - 520 or T == WIDTH - 545 or T == WIDTH - 570 or T == WIDTH - 595 or T == WIDTH - 620 or T == WIDTH - 645 or T == WIDTH - 670:
+            self.speedx = self.speedx * -1
+            self.shooting()
+        if T == WIDTH - 705 or T == WIDTH - 730 or T == WIDTH - 755 or T == WIDTH - 780 or T == WIDTH - 805 or T == WIDTH - 830 or T == WIDTH - 860 or T == WIDTH - 890 or T == WIDTH - 920 or T == WIDTH - 950 or T == WIDTH - 980:
+            self.speedx = self.speedx * -1
+            self.shooting()
         if self.rect.right>WIDTH :
             self.speedx = self.speedx  -1
             self.shooting()
-
         if self.rect.left < 0 :
             self.speedx = self.speedx  +1
             self.shooting()
 
     def shooting(self):
-        enemybullet = EnemyBullet(self.rect.centerx, self.rect.top )
-        all_sprites.add(enemybullet)
-        enemybullets.add(enemybullet)
+        now = pygame.time.get_ticks()
+        if now - self.last_shot > self.shoot_delay:
+            self.last_shot = now         
+            enemybullet = EnemyBullet(self.rect.centerx, self.rect.top )
+            all_sprites.add(enemybullet)
+            enemybullets.add(enemybullet)   
+
+    def powerup(self):
+        self.power += 1
+        self.power_time = pygame.time.get_ticks()
         
             
 class Bullet(pygame.sprite.Sprite):
@@ -383,16 +446,16 @@ pygame.mixer.music.set_volume(0.4)
 
 all_sprites = pygame.sprite.Group()
 player = StatekGracza()
-Boss = MobBoss()
+Bosses = pygame.sprite.Group()
 tarcza = draw_pas()
 mobs = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 powerups = pygame.sprite.Group()
 enemybullets = pygame.sprite.Group()
+newboss()
 all_sprites.add(player)
 all_sprites.add(tarcza)
-
-for i in range(15 ):
+for i in range(1 ):
     newmob()
 
 #dynamics
@@ -401,15 +464,19 @@ counter = 0
 counterplayer = 0
 score = 0
 Health = player.shield
-
-
+saves = 0
+poziom = 0
 pygame.mixer.music.play(loops = -1)
 #game state first state game menu
 game_over = True
 # Game loop
+saved_states = []
+originator = Originator()
+
 running = True
 while running:
     
+    keystate = pygame.key.get_pressed()
     if game_over == True:
         show_menu_screen()
         game_over = False
@@ -425,8 +492,29 @@ while running:
         player.shield = 100
         Health = player.shield
         all_sprites.add(tarcza)
-        for i in range(15 ):
+        for i in range(45 ):
             newmob()
+    #creating memento saves
+    if keystate[pygame.K_0]:
+        if saves == 1:
+            print("none")
+            #originator.set("State1")
+            #saved_states.append(originator.save_to_memento())
+            #saves = saves + 1
+        if saves == 2:
+            originator.set("State2")
+            saved_states.append(originator.save_to_memento())
+            saves = saves + 1
+        if saves == 3:
+            originator.set("State3")
+            saved_states.append(originator.save_to_memento())
+            saves = saves + 1
+        if saves >= 3:
+            saves = 0
+        originator.restore_from_memento(saved_states[0])
+    if keystate[pygame.K_UP]:
+        show_menu_screen()
+
     # keep loop running at the right speed
     clock.tick(FPS)
     # Process input (events)
@@ -446,24 +534,30 @@ while running:
         newmob()
         expl = Explosion(hit.rect.center, 'sm')
         all_sprites.add(expl)
+        poziom = poziom + 1
+        #if poziom == 35:
+        #    Mob.powerup()
+        #    poziom = 0
         if random.random() >0.8:
             pow = Pow(hit.rect.center)
             all_sprites.add(pow)
             powerups.add(pow)
-        if counterboss > 100:
-            all_sprites.add(Boss)
+        if counterboss > 10000:
+            newboss()
             counterboss = 0    
 
     #if player hits boss mob
-    hits = pygame.sprite.spritecollide(Boss, bullets, True)
-    for hit in hits:        
-        counter = counter + 1
-        expl = Explosion(hit.rect.center, 'lg')
-        all_sprites.add(expl)
-        if counter == 5:
-            score += hit.radius /2 
-            Boss.kill()
+    hits = pygame.sprite.groupcollide(Bosses, bullets, True, True)
+    for hit in hits:
+        counter += 1
+        if counter > 100:
             counter = 0
+            newboss()
+            counter = counter + 1
+            expl = Explosion(hit.rect.center, 'lg')
+            all_sprites.add(expl)
+            score += hit.radius /2 
+        
     
     #if player hits pow
     hits = pygame.sprite.spritecollide(player, powerups, True)
@@ -492,7 +586,7 @@ while running:
             player.shield = 100
     
     #if player lost all lives:
-    if player.lives ==  0 and not death_explosion.alive():
+    if player.lives ==  0:# and not death_explosion.alive():
         game_over = True
     # Draw / render
     screen.fill(BLACK)
