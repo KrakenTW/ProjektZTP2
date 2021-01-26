@@ -65,15 +65,15 @@ class LVLStation(LVLState):
         self.state = self.state.changeState()
 
 LVL = LVLStation()
-print("The radios internal state is currently: {}".format(LVL.getState()))
+print("The LVL state is currently: {}".format(LVL.getState()))
 
 ON = TurnedUP()
 OFF = TurnedDOWN()
 
-print("Turning on the radio!")
+print("Turning on ")
 LVL.setState(ON)
 LVL.changeState()
-print("The radio internal state is currently: {}".format(LVL.getState()))
+print("The LVL state is currently: {}".format(LVL.getState()))
 
 
 
