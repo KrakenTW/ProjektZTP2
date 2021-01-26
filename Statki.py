@@ -417,9 +417,15 @@ def show_menu_screen():
                 pygame.quit()
             if event.type == pygame.KEYUP:
                 waiting = False
-def show_pause_screen():
+def show_shop_screen(poziom):
     screen.blit(background, background_rect)
-    draw_text(screen, "PAUSE", 72, WIDTH/2, HEIGHT / 4)
+    draw_text(screen, "SHOP", 72, WIDTH/2, HEIGHT - 680)
+    draw_text(screen, "1. Bonus ATK : koszt 3500", 32, WIDTH - 800, HEIGHT- 580)
+    draw_text(screen, "2. Bonus HP  : koszt 2750", 32, WIDTH - 800, HEIGHT- 480)
+    draw_text(screen, "3. Bonus Live: koszt 6000", 32, WIDTH - 800, HEIGHT- 380)
+    draw_text(screen, "4. Poziom +1 : koszt 4500", 32, WIDTH - 800, HEIGHT- 280)
+    draw_text(screen, "5. Spawn Boss: koszt 6000", 32, WIDTH - 795, HEIGHT- 180)
+    draw_text(screen, "6. Exit  ", 32, WIDTH - 935, HEIGHT- 80)
     pygame.display.flip()
     waiting = True
     while waiting:
@@ -427,7 +433,26 @@ def show_pause_screen():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-            if event.type == pygame.KEYUP:
+            if event.type == pygame.K_1:
+                player.powerup()
+                waiting = False
+            if event.type == pygame.K_2:
+                player.shield = player.shield + 50
+                if player.shield >= 100:
+                    player.shield = 100
+                    waiting = False
+            if event.type == pygame.K_3:
+                player.lives += 1
+                waiting =False
+            if event.type == pygame.K_4:
+                increaseLVL()
+                waiting = False
+            if event.type == pygame.K_5:
+                m = MobBoss()
+                all_sprites.add(m)    
+                Bosses.add(m)
+                waiting = False
+            if event.type == pygame.KEYDOWN:
                 waiting = False
 
 #load all graphs from dirname
@@ -529,13 +554,13 @@ while running:
         player.shield = 100
         Health = player.shield
         all_sprites.add(tarcza)
-        for i in range(45 ):
+        for i in range(25 ):
             newmob()
     
-    if keyboard.add_hotkey('P'):
-        show_pause_screen()
-    #if keystate[pygame.K_UP]:
-     #   show_pause_screen()
+    #if keyboard.add_hotkey('P'):
+    #    show_shop_screen()
+    if keystate[pygame.K_UP]:
+        show_shop_screen(poziom)
 
     # keep loop running at the right speed
     clock.tick(FPS)
