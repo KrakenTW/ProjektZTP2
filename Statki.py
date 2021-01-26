@@ -532,9 +532,10 @@ while running:
         for i in range(45 ):
             newmob()
     
-    
-    if keystate[pygame.K_UP]:
+    if keyboard.add_hotkey('P'):
         show_pause_screen()
+    #if keystate[pygame.K_UP]:
+     #   show_pause_screen()
 
     # keep loop running at the right speed
     clock.tick(FPS)
