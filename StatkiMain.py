@@ -66,31 +66,6 @@ def draw_lives(surf, x, y, lives, img):
         surf.blit(img, img_rect)
 
 
-<<<<<<< HEAD
-=======
-class Memento(object):
-    def __init__(self, state):
-        self._state = state
-
-    def get_saved_state(self):
-        return self._state
-
-class Originator(object):
-    _state = ""
-
-    def set(self, state):
-        print("Originator: Setting state to", state)
-        self._state = state
-
-    def save_to_memento(self):
-        print("Originator: Saving to Memento.")
-        return Memento(self._state)
-
-    def restore_from_memento(self, memento):
-        self._state = memento.get_saved_state()
-        print("Originator: State after restoring from Memento:", self._state)
-
->>>>>>> 8ee88d4f6c78e9553bb1f2abd07f8a41e5ea8a62
 
 class draw_pas(pygame.sprite.Sprite):
     def __init__(self):
@@ -487,10 +462,6 @@ pygame.mixer.music.play(loops = -1)
 game_over = True
 # Game loop
 saved_states = []
-<<<<<<< HEAD
-=======
-originator = Originator()
->>>>>>> 8ee88d4f6c78e9553bb1f2abd07f8a41e5ea8a62
 
 running = True
 while running:
@@ -513,33 +484,10 @@ while running:
         all_sprites.add(tarcza)
         for i in range(45 ):
             newmob()
-<<<<<<< HEAD
     
     
     if keystate[pygame.K_UP]:
         show_pause_screen()
-=======
-    #creating memento saves
-    if keystate[pygame.K_0]:
-        if saves == 1:
-            print("none")
-            #originator.set("State1")
-            #saved_states.append(originator.save_to_memento())
-            #saves = saves + 1
-        if saves == 2:
-            originator.set("State2")
-            saved_states.append(originator.save_to_memento())
-            saves = saves + 1
-        if saves == 3:
-            originator.set("State3")
-            saved_states.append(originator.save_to_memento())
-            saves = saves + 1
-        if saves >= 3:
-            saves = 0
-        originator.restore_from_memento(saved_states[0])
-    if keystate[pygame.K_UP]:
-        show_menu_screen()
->>>>>>> 8ee88d4f6c78e9553bb1f2abd07f8a41e5ea8a62
 
     # keep loop running at the right speed
     clock.tick(FPS)
