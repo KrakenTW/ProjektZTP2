@@ -3,6 +3,7 @@ import random
 import time
 from os import X_OK, path
 from threading import Lock, Thread
+from abc import abstractmethod, ABCMeta
 
 img_dir = path.join(path.dirname(__file__), 'img')
 snd_dir = path.join(path.dirname(__file__), 'dźwięki')
@@ -29,6 +30,52 @@ pygame.display.set_caption("Statki")
 clock = pygame.time.Clock()
 
 font_name = pygame.font.match_font('arial')
+class LVLState(metaclass = ABCMeta):
+    @abstractmethod
+    def changeState(self):
+        pass
+
+class TurnedUP(LVLState):
+    def changeState(self):
+        return "UP"
+
+class TurnedDOWN(LVLState):
+    def changeState(self):
+        return "DOWN"
+
+class IncreaseLVL(LVLState):
+    def changeState(self):
+        return 1
+
+class DecreaseLVL(LVLState):
+    def changeState(self):
+        return -1
+
+class LVLStation(LVLState):
+    def __init__(self):
+        self.state = None
+    
+    def setState(self, status):
+        self.state = status
+    
+    def getState(self):
+        return self.state
+    
+    def changeState(self):
+        self.state = self.state.changeState()
+
+LVL = LVLStation()
+print("The radios internal state is currently: {}".format(LVL.getState()))
+
+ON = TurnedUP()
+OFF = TurnedDOWN()
+
+print("Turning on the radio!")
+LVL.setState(ON)
+LVL.changeState()
+print("The radio internal state is currently: {}".format(LVL.getState()))
+
+
 
 def newmob():
     m = Mob()
@@ -66,31 +113,6 @@ def draw_lives(surf, x, y, lives, img):
         surf.blit(img, img_rect)
 
 
-<<<<<<< HEAD
-=======
-class Memento(object):
-    def __init__(self, state):
-        self._state = state
-
-    def get_saved_state(self):
-        return self._state
-
-class Originator(object):
-    _state = ""
-
-    def set(self, state):
-        print("Originator: Setting state to", state)
-        self._state = state
-
-    def save_to_memento(self):
-        print("Originator: Saving to Memento.")
-        return Memento(self._state)
-
-    def restore_from_memento(self, memento):
-        self._state = memento.get_saved_state()
-        print("Originator: State after restoring from Memento:", self._state)
-
->>>>>>> 8ee88d4f6c78e9553bb1f2abd07f8a41e5ea8a62
 
 class draw_pas(pygame.sprite.Sprite):
     def __init__(self):
@@ -487,10 +509,6 @@ pygame.mixer.music.play(loops = -1)
 game_over = True
 # Game loop
 saved_states = []
-<<<<<<< HEAD
-=======
-originator = Originator()
->>>>>>> 8ee88d4f6c78e9553bb1f2abd07f8a41e5ea8a62
 
 running = True
 while running:
@@ -513,33 +531,10 @@ while running:
         all_sprites.add(tarcza)
         for i in range(45 ):
             newmob()
-<<<<<<< HEAD
     
     
     if keystate[pygame.K_UP]:
         show_pause_screen()
-=======
-    #creating memento saves
-    if keystate[pygame.K_0]:
-        if saves == 1:
-            print("none")
-            #originator.set("State1")
-            #saved_states.append(originator.save_to_memento())
-            #saves = saves + 1
-        if saves == 2:
-            originator.set("State2")
-            saved_states.append(originator.save_to_memento())
-            saves = saves + 1
-        if saves == 3:
-            originator.set("State3")
-            saved_states.append(originator.save_to_memento())
-            saves = saves + 1
-        if saves >= 3:
-            saves = 0
-        originator.restore_from_memento(saved_states[0])
-    if keystate[pygame.K_UP]:
-        show_menu_screen()
->>>>>>> 8ee88d4f6c78e9553bb1f2abd07f8a41e5ea8a62
 
     # keep loop running at the right speed
     clock.tick(FPS)
