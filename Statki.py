@@ -419,7 +419,7 @@ for i in range(9):
     img.set_colorkey(BLACK)
     img_pl = pygame.transform.scale(img, (110,110))
     expl_anim['player'].append(img_pl)
-
+create = 0
 tarcza = pygame.transform.scale(Shield, (10,10))
 coin_img = pygame.image.load(path.join(img_dir, 'coin.png')).convert()
 coin_img = pygame.transform.scale(coin_img, (18,18))
@@ -484,24 +484,7 @@ while running:
         all_sprites.add(tarcza)
         for i in range(45 ):
             newmob()
-    #creating memento saves
-    if keystate[pygame.K_0]:
-        if saves == 1:
-            print("none")
-            #originator.set("State1")
-            #saved_states.append(originator.save_to_memento())
-            #saves = saves + 1
-        if saves == 2:
-            originator.set("State2")
-            saved_states.append(originator.save_to_memento())
-            saves = saves + 1
-        if saves == 3:
-            originator.set("State3")
-            saved_states.append(originator.save_to_memento())
-            saves = saves + 1
-        if saves >= 3:
-            saves = 0
-        originator.restore_from_memento(saved_states[0])
+    
     
     if keystate[pygame.K_UP]:
         show_pause_screen()
