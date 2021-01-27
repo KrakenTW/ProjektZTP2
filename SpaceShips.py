@@ -42,8 +42,8 @@ player_mini_img = pygame.transform.scale(player_img, (25, 19))
 player_mini_img.set_colorkey(BLACK)
 bullet_img = pygame.image.load(path.join(img_dir, "laserRed16.png")).convert()
 enemy_images = []
-enemy_list = ['playerShip1_blue.png', 'playerShip1_green.png',
-                'playerShip1_orange.png']
+enemy_list = ['ufoGreen.png', 'ufoRed.png',
+                'ufoYellow.png']
 enemy_bullet_img = pygame.image.load(path.join(img_dir, "laserRed08.png")).convert()
 for img in enemy_list:
     enemy_images.append(pygame.image.load(path.join(img_dir, img)).convert())
@@ -419,12 +419,12 @@ class Asteroid(pygame.sprite.Sprite):
         self.rect.x = random.randrange(30, WIDTH - 60) #
         self.rect.y = random.randrange(30, 300) #
         self.moves = 1
-        self.speedy = 2 #random.randrange(1, 8) #
-        self.speedx = 2 #random.randrange(-3, 3) #
+        self.speedy = 1 #random.randrange(1, 8) #
+        self.speedx = 1 #random.randrange(-3, 3) #
         self.move = 2
         self.move_speed = 1
         self.rotation = 0
-        self.rotation_speed = 0#random.randrange(-8, 8) #
+        self.rotation_speed = 8#random.randrange(-8, 8) #
         self.last_update = pygame.time.get_ticks()
         self.shoot_delay = random.randrange(1700,2500)
         self.last_shot = pygame.time.get_ticks()
@@ -435,7 +435,6 @@ class Asteroid(pygame.sprite.Sprite):
 
 
     def LVLUP(self):
-        self.power += 1
         LVL = LVLStation()
         print("The LVL state is currently: {}".format(LVL.getState()))
 
@@ -508,8 +507,10 @@ class Asteroid(pygame.sprite.Sprite):
             
         if self.rect.left < 0 :
             self.speedx = self.speedx  +1
-        if self.rect.y >= HEIGHT - 330 or self.rect.y <= HEIGHT - 760:
-            self.speedy = self.speedy *-1    
+        if self.rect.y >= HEIGHT + 45 or self.rect.y <= HEIGHT - 760:
+            self.speedy = self.speedy *-1.2
+            if self.speedy > 9:
+                self.speedy = 2    
 
     def move_strategy(self):
         self._strategy.move_strategy()
@@ -867,7 +868,7 @@ class Game:
                 #check if player has enough points collected to LVL up
                 if self.scoreLVLUP >= 4000:
                     print(self.scoreLVLUP)
-                    Asteroid.LVLUP()
+                    Asteroid.LVLUP(self)
                     self.scoreLVLUP = 0
                     print(self.scoreLVLUP)
                 #check if playser was hitted by enemybullet
