@@ -101,9 +101,12 @@ def draw_lives(surf, x, y, lives, img):
     
 def show_go_screen():
     screen.blit(background, background_rect)
-    draw_text(screen, "Spaceshooter", 64, WIDTH / 2, HEIGHT / 4)
-    draw_text(screen, "Arrow keys to move, Space to fire", 22, WIDTH/2, HEIGHT / 2)
-    draw_text(screen, "Press a key to begin", 18, WIDTH / 2, HEIGHT * 3 / 4)
+    draw_text(screen, "Spaceshooter", 64, WIDTH / 2, HEIGHT / 4 -130)
+    draw_text(screen, "<-   TO MOVE LEFT", 32, WIDTH - 820, HEIGHT- 580)
+    draw_text(screen, "->    TO MOVE RIGHT ", 32, WIDTH - 800, HEIGHT- 480)
+    draw_text(screen, "SPACE TO SHOOT", 32, WIDTH - 820, HEIGHT- 280)
+    draw_text(screen, "P   To SHOW BUY MENU", 32, WIDTH - 780, HEIGHT- 380)
+    draw_text(screen, "ENTER TO START", 32, WIDTH - 823, HEIGHT- 180)
     pygame.display.flip()
     waiting = True
     while waiting:
